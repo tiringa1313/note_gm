@@ -33,13 +33,33 @@ class _HomeViewState extends State<HomeView> {
       appBar: AppBar(
         title: Text('Boletins'),
       ),
-      body: ListView.builder(
+      body: ListView.separated(
         itemCount: boletins.length,
+        separatorBuilder: (context, index) => Divider(
+          color: Colors.grey,
+          thickness: 1,
+          indent: 16,
+          endIndent: 16,
+        ),
         itemBuilder: (context, index) {
           Boletim boletim = boletins[index];
           return ListTile(
-            title: Text(boletim.tituloAtendimento),
-            subtitle: Text(_formatDate(boletim.data)),
+            contentPadding:
+                EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            title: Text(
+              boletim.tituloAtendimento,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            subtitle: Text(
+              _formatDate(boletim.data),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+            ),
             onTap: () {
               // Código para navegar para uma página de detalhes, se necessário
             },
