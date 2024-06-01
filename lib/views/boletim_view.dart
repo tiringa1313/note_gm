@@ -1,13 +1,15 @@
-import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import '../models/database_helper.dart';
 import '../models/boletim.dart';
 
 class BoletimView extends StatelessWidget {
   final TextEditingController tituloController = TextEditingController();
   final TextEditingController descricaoController = TextEditingController();
+  final String viatura;
+  final String nomenclatura; // Adicionando o parâmetro nomenclatura
+
+  BoletimView({required this.viatura, required this.nomenclatura});
 
   @override
   Widget build(BuildContext context) {
@@ -19,12 +21,13 @@ class BoletimView extends StatelessWidget {
     int minutos = dataAtual.minute;
 
     // Formata a data para o formato desejado ("dia de mês de ano")
-    String dataFormatada =
-        DateFormat('dd MMMM yyyy', 'pt_BR').format(dataAtual);
+    String dia = DateFormat('dd', 'pt_BR').format(dataAtual);
+    String mesEAno = DateFormat('MMMM yyyy', 'pt_BR').format(dataAtual);
+    String dataFormatada = '$dia de $mesEAno';
 
-    // Define a descrição com as horas, minutos e a data
+    // Define a descrição com as horas, minutos e a data, incluindo o número da viatura e a nomenclatura
     String descricao =
-        "Por volta das $horas horas e $minutos minutos do dia $dataFormatada, a guarnição da viatura ";
+        "Por volta das $horas horas e $minutos minutos do dia $dataFormatada, a guarnição da viatura $viatura - $nomenclatura,";
 
     // Define o texto inicial no controlador do campo de descrição
     descricaoController.text = descricao;
@@ -41,6 +44,7 @@ class BoletimView extends StatelessWidget {
             TextField(
               controller: tituloController,
               decoration: InputDecoration(labelText: 'Título do Atendimento'),
+              textCapitalization: TextCapitalization.sentences,
             ),
             SizedBox(height: 20),
             Text(
@@ -63,6 +67,7 @@ class BoletimView extends StatelessWidget {
                   decoration: InputDecoration(
                     border: InputBorder.none,
                   ),
+                  textCapitalization: TextCapitalization.sentences,
                 ),
               ),
             ),
