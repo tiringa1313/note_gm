@@ -27,6 +27,8 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _loadBoletins() async {
     boletins = await DatabaseHelper().getBoletins();
+    print(
+        "Número de boletins carregados: ${boletins.length}"); // Adicionando o print
     setState(() {});
   }
 
@@ -145,6 +147,7 @@ class _HomeViewState extends State<HomeView> {
                     decoration: InputDecoration(
                       labelText: 'Buscar Boletim',
                       border: OutlineInputBorder(),
+                      suffixIcon: Icon(Icons.search), // Ícone de lupa
                     ),
                     onChanged: (value) {
                       _searchBoletins();
