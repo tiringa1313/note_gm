@@ -169,17 +169,32 @@ class BoletimView extends StatelessWidget {
                   icon: Icon(Icons.content_copy),
                   label: Text('Copiar Boletim'),
                 ),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      String titulo = tituloController.text;
-                      String descricao = descricaoController.text;
+                SizedBox(width: 16), // Adiciona um espaçamento entre os botões
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    String titulo = tituloController.text;
+                    String descricao = descricaoController.text;
 
-                      // Salvar o boletim
-                    },
-                    icon: Icon(Icons.save),
-                    label: Text('Salvar Boletim'),
-                  ),
+                    // Cria um objeto Boletim com os dados do formulário
+                    Boletim boletim = Boletim.create(
+                      data: DateTime.now(),
+                      tituloAtendimento: titulo,
+                      descricao: descricao,
+                    );
+
+                    // Insere o boletim no banco de dados
+                    await DatabaseHelper().insertBoletim(boletim);
+
+                    // Exibe uma snackbar informando que o boletim foi salvo com sucesso
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Boletim salvo com sucesso!')),
+                    );
+
+                    // Fecha a tela atual e retorna um valor para indicar que o boletim foi salvo
+                    Navigator.pop(context, true);
+                  },
+                  icon: Icon(Icons.save),
+                  label: Text('Salvar Boletim'),
                 ),
               ],
             ),
