@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:note_gm/views/used_boletins_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'boletim_detail_view.dart';
 import 'boletim_view.dart';
 import '../models/database_helper.dart';
 import '../models/boletim.dart';
@@ -12,6 +14,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   List<Boletim> boletins = [];
+  List<Boletim> _filteredBoletins = [];
   TextEditingController viaturaController = TextEditingController();
   TextEditingController nomenclaturaController = TextEditingController();
   TextEditingController searchController = TextEditingController();
@@ -27,8 +30,8 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _loadBoletins() async {
     boletins = await DatabaseHelper().getBoletins();
-    print(
-        "Número de boletins carregados: ${boletins.length}"); // Adicionando o print
+    _filteredBoletins = List.from(boletins); // Initialize the filtered list
+    print("Número de boletins carregados: ${boletins.length}");
     setState(() {});
   }
 
@@ -57,8 +60,40 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _searchBoletins() {
-    // Implement the search functionality based on the searchController text
-    // For example, you could filter the boletins list based on the search query
+    setState(() {
+      if (searchController.text.isEmpty) {
+        _filteredBoletins = List.from(boletins);
+      } else {
+        _filteredBoletins = boletins.where((boletim) {
+          return boletim.tituloAtendimento.toLowerCase().contains(
+                    searchController.text.toLowerCase(),
+                  ) ||
+              boletim.descricao.toLowerCase().contains(
+                    searchController.text.toLowerCase(),
+                  );
+        }).toList();
+      }
+    });
+  }
+
+  void _excluirBoletim(String boletimId) async {
+    try {
+      // Exclui o boletim do banco de dados
+      await DatabaseHelper().deleteBoletim(boletimId);
+
+      // Atualiza a lista de boletins após a exclusão
+      _loadBoletins();
+
+      // Exibe uma mensagem de sucesso
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Boletim excluído com sucesso!')),
+      );
+    } catch (e) {
+      // Exibe uma mensagem de erro se a exclusão falhar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao excluir o boletim: $e')),
+      );
+    }
   }
 
   @override
@@ -159,9 +194,9 @@ class _HomeViewState extends State<HomeView> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: boletins.length,
+              itemCount: _filteredBoletins.length,
               itemBuilder: (context, index) {
-                Boletim boletim = boletins[index];
+                Boletim boletim = _filteredBoletins[index];
                 return Column(
                   children: [
                     Divider(
@@ -188,8 +223,21 @@ class _HomeViewState extends State<HomeView> {
                         ),
                       ),
                       onTap: () {
-                        // Código para navegar para uma página de detalhes, se necessário
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BoletimDetailView(
+                              boletim: boletim,
+                            ),
+                          ),
+                        );
                       },
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          _excluirBoletim(boletim.id);
+                        },
+                      ),
                     ),
                     Divider(
                       color: Colors.grey,
@@ -204,25 +252,32 @@ class _HomeViewState extends State<HomeView> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          String? viatura = prefs.getString('viatura');
-          String? nomenclatura = prefs.getString('nomenclatura');
-          bool? result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => BoletimView(
-                viatura: viatura ?? "",
-                nomenclatura: nomenclatura ?? "",
-              ),
-            ),
-          );
-          if (result == true) {
-            _loadBoletins(); // Recarrega a lista de boletins se um novo boletim foi salvo
-          }
-        },
-        child: Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'addBoletim',
+            onPressed: () async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              String? viatura = prefs.getString('viatura');
+              String? nomenclatura = prefs.getString('nomenclatura');
+              bool? result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BoletimView(
+                    viatura: viatura ?? "",
+                    nomenclatura: nomenclatura ?? "",
+                  ),
+                ),
+              );
+              if (result == true) {
+                _loadBoletins(); // Recarrega a lista de boletins se um novo boletim foi salvo
+              }
+            },
+            child: Icon(Icons.add),
+          ),
+          SizedBox(height: 16),
+        ],
       ),
     );
   }

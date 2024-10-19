@@ -70,6 +70,51 @@ class BoletimView extends StatelessWidget {
     }
   }
 
+  Future<void> _exibirDialogo(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Corrigir Texto com IA',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 10),
+              TextField(
+                controller: instrucoesController,
+                decoration: InputDecoration(
+                  hintText: 'Por favor, descreva as instruções...',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                String instrucoes = instrucoesController.text;
+                Navigator.of(context).pop();
+                await corrigirTextoComIA(context, instrucoes);
+              },
+              child: Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime dataAtual = DateTime.now();
@@ -95,12 +140,6 @@ class BoletimView extends StatelessWidget {
             TextField(
               controller: tituloController,
               decoration: InputDecoration(labelText: 'Título do Atendimento'),
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            SizedBox(height: 20),
-            TextField(
-              controller: instrucoesController,
-              decoration: InputDecoration(labelText: 'Instruções para IA'),
               textCapitalization: TextCapitalization.sentences,
             ),
             SizedBox(height: 20),
@@ -132,27 +171,28 @@ class BoletimView extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  String texto = descricaoController.text;
-                  String instrucoes = instrucoesController.text;
-                  try {
-                    await corrigirTextoComIA(context, instrucoes);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Falha ao corrigir o texto: $e')),
-                    );
-                  }
+                  await _exibirDialogo(context);
                 },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal:
+                          24), // ajuste o tamanho do padding conforme necessário
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.lightbulb_outline),
                     SizedBox(width: 8.0),
-                    Text('Corrigir com IA'),
+                    Text(
+                      'Corrigir com IA',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

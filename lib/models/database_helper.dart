@@ -20,8 +20,9 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'boletim_database.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Atualizando a versão do banco de dados
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade, // Adicionando o método de atualização
     );
   }
 
@@ -42,6 +43,26 @@ class DatabaseHelper {
         data TEXT
       )
     ''');
+
+    // Criar tabela de placas
+    await db.execute('''
+      CREATE TABLE placas(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        placa TEXT UNIQUE
+      )
+    ''');
+  }
+
+  // Método para atualizar o banco de dados (adicionar a tabela de placas)
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE placas(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          placa TEXT UNIQUE
+        )
+      ''');
+    }
   }
 
   Future<int> insertEquipe(Equipe equipe) async {
@@ -100,12 +121,44 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deleteBoletim(int id) async {
+  Future<int> deleteBoletim(String id) async {
     Database db = await database;
     return await db.delete(
       'boletim',
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<List<Boletim>> getUsedBoletins() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('boletim',
+        where: 'used = ?',
+        whereArgs: [1]); // Ajuste a lógica conforme sua necessidade
+    return List.generate(maps.length, (i) {
+      return Boletim.fromMap(maps[i]);
+    });
+  }
+
+  // Métodos para gerenciar placas
+  Future<bool> existsPlaca(String placa) async {
+    Database db = await database;
+    final result =
+        await db.query('placas', where: 'placa = ?', whereArgs: [placa]);
+    return result.isNotEmpty;
+  }
+
+  Future<int> insertPlaca(String placa) async {
+    Database db = await database;
+    return await db.insert('placas', {'placa': placa},
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<String>> getPlacas() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('placas');
+    return List.generate(maps.length, (i) {
+      return maps[i]['placa'] as String;
+    });
   }
 }

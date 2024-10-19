@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:note_gm/views/home_view.dart'; // Corrigido o caminho para o pacote views
-import 'package:sqflite/sqflite.dart' as sqflite;
+import 'package:intl/date_symbol_data_local.dart'; // Para localização de datas
+import 'package:note_gm/views/home_view.dart'; // Certifique-se de que o caminho está correto
+import 'package:note_gm/views/menu_principal_view.dart'; // Import do MenuPrincipal
+import 'package:sqflite/sqflite.dart' as sqflite; // Para o uso do SQLite
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
+import 'dart:io'; // Para detectar a plataforma
 
 void main() async {
-  // Inicialize o SQFlite FFI
-  sqflite_ffi.sqfliteFfiInit();
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicialize os dados de localização
-  initializeDateFormatting();
+  if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+    // Inicialize o SQFlite FFI para suporte desktop
+    sqflite_ffi.sqfliteFfiInit();
+    sqflite.databaseFactory = sqflite_ffi.databaseFactoryFfi;
+  }
 
+  // Inicialize os dados de localização (por exemplo, para datas no formato local)
+  await initializeDateFormatting();
+
+  // Certifique-se de que todas as operações assíncronas acima terminem antes de iniciar o app
   runApp(MyApp());
 }
 
@@ -20,12 +28,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Minha Aplicação',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.blue, // Defina o tema da aplicação
       ),
-      home: HomeView(),
+      home: MenuPrincipalView(), // Atualizado para abrir o MenuPrincipal
+      debugShowCheckedModeBanner: false, // Para remover a faixa de "debug"
     );
   }
 }
-
-
-// Defina a classe HomeView aqui...
