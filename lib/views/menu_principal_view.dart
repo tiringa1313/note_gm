@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:note_gm/views/boletim_fiscalizacao_view.dart';
 import 'package:note_gm/views/home_view.dart'; // Import da HomeView
 
 import 'package:flutter/material.dart';
@@ -27,8 +28,11 @@ class MenuPrincipalView extends StatelessWidget {
             _buildCard(context, 'Placas Visadas', Icons.motorcycle,
                 PlacasVisadasView()), // Direciona para Placas Visadas
             _buildCard(context, 'Modelos', Icons.widgets, null), // Placeholder
-            _buildCard(context, 'Boletim Fiscalização', Icons.local_police,
-                null), // Novo card para Boletim de Trânsito
+            _buildCard(
+                context,
+                'B.A Trânsito',
+                FontAwesomeIcons.triangleExclamation,
+                BoletimFiscalizacaoView()),
             _buildCard(
                 context, 'BOAT', Icons.report, null), // Novo card para BOAT
           ],
