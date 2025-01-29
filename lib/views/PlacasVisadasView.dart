@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:note_gm/models/database_helper.dart';
 import 'package:intl/intl.dart';
-import 'package:note_gm/models/placa_veiculo.dart'; // Para formatar a data
+import 'package:note_gm/models/placa_veiculo.dart';
+import 'package:image_picker/image_picker.dart'; // Importando o ImagePicker
 
 class PlacasVisadasView extends StatefulWidget {
   @override
@@ -17,6 +20,9 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
   final DatabaseHelper _dbHelper =
       DatabaseHelper(); // Instância do DatabaseHelper
 
+  // Usando ValueNotifier para o caminho da foto
+  ValueNotifier<String?> _fotoPathNotifier = ValueNotifier<String?>(null);
+
   @override
   void initState() {
     super.initState();
@@ -24,10 +30,24 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
   }
 
   Future<void> _fetchPlacas() async {
-    List<PlacaVeiculo> placas =
-        (await _dbHelper.getPlacas()).cast<PlacaVeiculo>();
+    // Obtém a lista de placas (strings)
+    List<String> placasStrings = await _dbHelper.getPlacas();
+
+    // Converte a lista de strings em uma lista de objetos PlacaVeiculo
+    List<PlacaVeiculo> placasVeiculo = placasStrings.map((placa) {
+      return PlacaVeiculo(
+        placa: placa,
+        condutor: '',
+        cnh: '',
+        cpf: '',
+        observacao: '',
+        fotoPath: '',
+        dataCadastro: DateTime.now(),
+      );
+    }).toList();
+
     setState(() {
-      _placas = placas;
+      _placas = placasVeiculo;
     });
   }
 
@@ -40,7 +60,6 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
           final _cnhController = TextEditingController();
           final _cpfController = TextEditingController();
           final _observacaoController = TextEditingController();
-          String? fotoPath; // Mantendo o campo para futuro uso
 
           return Dialog(
             shape: RoundedRectangleBorder(
@@ -48,8 +67,7 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
             ),
             child: Container(
               padding: EdgeInsets.all(16),
-              width: MediaQuery.of(context).size.width *
-                  0.8, // Ajusta o tamanho do diálogo
+              width: MediaQuery.of(context).size.width * 0.8,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -62,6 +80,7 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                       ),
                     ),
                     SizedBox(height: 20),
+                    // Campos do Formulário
                     TextField(
                       controller: _condutorController,
                       decoration: InputDecoration(
@@ -99,7 +118,43 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                         border: OutlineInputBorder(),
                       ),
                     ),
+                    SizedBox(height: 10),
+
+                    // Botão para tirar a foto
+                    ElevatedButton(
+                      onPressed: () async {
+                        final picker = ImagePicker();
+                        final pickedFile = await picker.pickImage(
+                          source: ImageSource.camera, // Usando a câmera
+                        );
+                        if (pickedFile != null) {
+                          print(
+                              'Caminho da foto: ${pickedFile.path}'); // Verifique o caminho da foto no console
+                          _fotoPathNotifier.value =
+                              pickedFile.path; // Armazena o caminho da foto
+                        }
+                      },
+                      child: Text('Tirar Foto do Veículo'),
+                    ),
+                    SizedBox(height: 10),
+
+                    // Usando ValueListenableBuilder para atualizar a imagem
+                    ValueListenableBuilder<String?>(
+                      valueListenable: _fotoPathNotifier,
+                      builder: (context, fotoPath, child) {
+                        return fotoPath != null
+                            ? Image.file(
+                                File(fotoPath),
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover,
+                              )
+                            : Container();
+                      },
+                    ),
+
                     SizedBox(height: 20),
+                    // Botões de Ação
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -109,15 +164,16 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                                 _cnhController.text.isNotEmpty &&
                                 _cpfController.text.isNotEmpty &&
                                 _observacaoController.text.isNotEmpty) {
-                              // Cria um objeto PlacaVeiculo com a data atual
+                              // Cria um objeto PlacaVeiculo com a foto
                               PlacaVeiculo novaPlaca = PlacaVeiculo(
                                 placa: placa,
                                 condutor: _condutorController.text,
                                 observacao: _observacaoController.text,
                                 cnh: _cnhController.text,
                                 cpf: _cpfController.text,
-                                fotoPath: fotoPath ?? '',
-                                dataCadastro: DateTime.now(), // Data atual
+                                fotoPath: _fotoPathNotifier.value ??
+                                    '', // Foto do veículo
+                                dataCadastro: DateTime.now(),
                               );
                               await _dbHelper.insertPlaca(novaPlaca as String);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -169,6 +225,7 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
+              // Campo de entrada de placa
               TextFormField(
                 controller: _placaController,
                 decoration: InputDecoration(
@@ -178,8 +235,7 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                 keyboardType: TextInputType.text,
                 textCapitalization:
                     TextCapitalization.characters, // Força letras maiúsculas
-                maxLength:
-                    7, // Define o limite de caracteres para 7, sem espaços
+                maxLength: 7, // Define o limite de caracteres para 7
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(
                       RegExp(r'[A-Za-z0-9]')), // Permite letras e números
@@ -188,10 +244,10 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                   if (value == null || value.isEmpty) {
                     return 'Informe uma placa válida';
                   }
-                  // Valida os dois formatos de placa (novo e antigo) sem espaços
-                  if (!RegExp(r'^[A-Z]{3}[0-9][A-Z][0-9]{2}$') // Formato novo (AAA1A23)
+                  // Valida os dois formatos de placa
+                  if (!RegExp(r'^[A-Z]{3}[0-9][A-Z][0-9]{2}$')
                           .hasMatch(value.toUpperCase()) &&
-                      !RegExp(r'^[A-Z]{3}[0-9]{4}$') // Formato antigo (AAA1234)
+                      !RegExp(r'^[A-Z]{3}[0-9]{4}$')
                           .hasMatch(value.toUpperCase())) {
                     return 'Formato de placa inválido';
                   }
@@ -199,16 +255,20 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                 },
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _cadastrarPlaca(_placaController.text.toUpperCase());
-                    _placaController.clear(); // Limpa o campo após o cadastro
-                  }
-                },
-                child: Text('Cadastrar Placa'),
+              // Botão de cadastrar placa - centralizado
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _cadastrarPlaca(_placaController.text.toUpperCase());
+                      _placaController.clear(); // Limpa o campo após o cadastro
+                    }
+                  },
+                  child: Text('Cadastrar Placa'),
+                ),
               ),
               SizedBox(height: 20),
+              // Exibe a lista de placas
               Expanded(
                 child: ListView.builder(
                   itemCount: _placas.length,
@@ -252,6 +312,7 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
     );
   }
 
+  // Função para mostrar os detalhes da placa
   void _mostrarDetalhesPlaca(PlacaVeiculo placaVeiculo) {
     showDialog(
       context: context,
@@ -265,7 +326,11 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
               Text('Placa: ${placaVeiculo.placa}'),
               Text('Condutor: ${placaVeiculo.condutor}'),
               Text('Observação: ${placaVeiculo.observacao}'),
-              // Adicione mais detalhes conforme necessário
+              // Exibir a foto, se existir
+              placaVeiculo.fotoPath.isNotEmpty
+                  ? Image.file(File(placaVeiculo.fotoPath),
+                      height: 100, width: 100)
+                  : Container(),
             ],
           ),
           actions: [

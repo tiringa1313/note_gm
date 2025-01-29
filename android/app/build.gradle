@@ -1,7 +1,7 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // O Flutter Gradle Plugin precisa ser aplicado após os plugins Android e Kotlin.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -15,18 +15,18 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
-    flutterVersionCode = "1"
+    flutterVersionCode = "1" // Versão do código, atualize conforme necessário
 }
 
 def flutterVersionName = localProperties.getProperty("flutter.versionName")
 if (flutterVersionName == null) {
-    flutterVersionName = "1.0"
+    flutterVersionName = "1.0" // Nome da versão, atualize conforme necessário
 }
 
 android {
     namespace = "com.example.note_gm"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdkVersion flutter.compileSdkVersion  // Usando a versão SDK do Flutter
+    ndkVersion flutter.ndkVersion // Usando a versão NDK do Flutter
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -34,25 +34,21 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.note_gm"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutterVersionCode.toInteger()
-        versionName = flutterVersionName
+        applicationId = "com.example.note_gm"  // ID único do aplicativo
+        minSdkVersion flutter.minSdkVersion   // Mínima versão SDK para Android
+        targetSdkVersion flutter.targetSdkVersion  // Versão de destino do SDK para Android
+        versionCode flutterVersionCode.toInteger() // Versão do código do Flutter
+        versionName flutterVersionName  // Nome da versão do Flutter
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.debug // Usando a configuração de assinatura de debug
         }
     }
 }
 
+// Localização da origem do Flutter
 flutter {
-    source = "../.."
+    source = "../.."  // Direção do código fonte Flutter
 }
