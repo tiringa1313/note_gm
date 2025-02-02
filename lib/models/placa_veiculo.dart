@@ -1,11 +1,11 @@
 class PlacaVeiculo {
-  final String placa;
-  final String condutor;
-  final String cnh;
-  final String cpf;
-  final String observacao;
-  final String fotoPath;
-  final DateTime dataCadastro;
+  String placa;
+  String condutor;
+  String cnh;
+  String cpf;
+  String observacao;
+  String fotoPath;
+  DateTime dataCadastro;
 
   PlacaVeiculo({
     required this.placa,
@@ -17,7 +17,20 @@ class PlacaVeiculo {
     required this.dataCadastro,
   });
 
-  // Método para converter o objeto PlacaVeiculo em um mapa
+  // Converte o mapa do banco de dados para o objeto PlacaVeiculo
+  factory PlacaVeiculo.fromMap(Map<String, dynamic> map) {
+    return PlacaVeiculo(
+      placa: map['placa'],
+      condutor: map['condutor'],
+      cnh: map['cnh'],
+      cpf: map['cpf'],
+      observacao: map['observacao'],
+      fotoPath: map['fotoPath'],
+      dataCadastro: DateTime.parse(map['dataCadastro']),
+    );
+  }
+
+  // Converte o objeto PlacaVeiculo para um mapa para inserção no banco de dados
   Map<String, dynamic> toMap() {
     return {
       'placa': placa,
@@ -26,8 +39,7 @@ class PlacaVeiculo {
       'cpf': cpf,
       'observacao': observacao,
       'fotoPath': fotoPath,
-      'dataCadastro':
-          dataCadastro.toIso8601String(), // Convertendo a data para string
+      'dataCadastro': dataCadastro.toIso8601String(),
     };
   }
 }

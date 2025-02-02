@@ -23,11 +23,13 @@ class DatabaseHelper {
       path,
       version: 2, // Atualizando a versão do banco de dados
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade, // Adicionando o método de atualização
+      onUpgrade:
+          _onUpgrade, // Adicionando método de upgrade para garantir alterações futuras
     );
   }
 
   Future _onCreate(Database db, int version) async {
+    // Criação das tabelas
     await db.execute('''
       CREATE TABLE equipe(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,37 +47,60 @@ class DatabaseHelper {
       )
     ''');
 
-    // Criar tabela de placas
     await db.execute('''
       CREATE TABLE placas(
-          placa TEXT PRIMARY KEY,
-          condutor TEXT,
-          cnh TEXT,
-          cpf TEXT,
-          observacao TEXT,
-          fotoPath TEXT,
-          dataCadastro TEXT
-        )
+        placa TEXT PRIMARY KEY,
+        condutor TEXT,
+        cnh TEXT,
+        cpf TEXT,
+        observacao TEXT,
+        fotoPath TEXT,
+        dataCadastro TEXT
+      )
     ''');
   }
 
-  // Método para atualizar o banco de dados (adicionar a tabela de placas)
+  // Método de upgrade para gerenciar futuras alterações no banco
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE placas(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          placa TEXT UNIQUE
-        )
-      ''');
+      // Adicionando novos campos ou tabelas no futuro
     }
   }
 
+  // Método para buscar os detalhes de uma placa específica
+  Future<PlacaVeiculo> getPlacaDetails(String placa) async {
+    Database db = await database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'placas',
+      where: 'placa = ?',
+      whereArgs: [placa],
+    );
+
+    print(
+        'Resultado da consulta: $result'); // Adicione este print para inspecionar os dados
+
+    if (result.isNotEmpty) {
+      return PlacaVeiculo(
+        placa: result[0]['placa'],
+        condutor: result[0]['condutor'],
+        cnh: result[0]['cnh'],
+        cpf: result[0]['cpf'],
+        observacao: result[0]['observacao'],
+        fotoPath: result[0]['fotoPath'],
+        dataCadastro: DateTime.parse(result[0]['dataCadastro']),
+      );
+    } else {
+      throw Exception('Placa não encontrada');
+    }
+  }
+
+  // Método para inserir uma nova equipe
   Future<int> insertEquipe(Equipe equipe) async {
     Database db = await database;
     return await db.insert('equipe', equipe.toMap());
   }
 
+  // Método para recuperar a lista de equipes
   Future<List<Equipe>> getEquipes() async {
     Database db = await database;
     List<Map<String, dynamic>> maps = await db.query('equipe');
@@ -84,6 +109,7 @@ class DatabaseHelper {
     });
   }
 
+  // Métodos para atualizar e deletar equipes
   Future<int> updateEquipe(Equipe equipe) async {
     Database db = await database;
     return await db.update(
@@ -155,14 +181,15 @@ class DatabaseHelper {
   }
 
   Future<void> insertPlaca(PlacaVeiculo placa) async {
-    final db = await database; // Obtém o banco de dados
-
-    // Converte o objeto PlacaVeiculo para um mapa de chave-valor
+    final db = await database;
     await db.insert(
-      'placas', // Nome da tabela
-      placa.toMap(), // Passa o mapa gerado pelo método toMap()
-      conflictAlgorithm: ConflictAlgorithm.replace, // Caso já exista, substitui
+      'placas', // nome da tabela
+      placa.toMap(),
+      conflictAlgorithm:
+          ConflictAlgorithm.replace, // Substitui em caso de conflito
     );
+    print(
+        'Placa cadastrada: ${placa.placa}'); // Adicionando log para verificação
   }
 
   Future<List<String>> getPlacas() async {

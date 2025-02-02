@@ -5,6 +5,25 @@ import 'package:intl/intl.dart';
 import 'package:note_gm/models/database_helper.dart';
 import 'package:note_gm/models/placa_veiculo.dart';
 
+import 'package:flutter/services.dart'; // Para usar TextInputFormatter
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
+import 'package:note_gm/views/DadosDoCondutorView.dart';
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    // Converter todo o texto inserido para maiúsculas
+    String newText = newValue.text.toUpperCase();
+    return newValue.copyWith(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length));
+  }
+}
+
 class PlacasVisadasView extends StatefulWidget {
   @override
   _PlacasVisadasViewState createState() => _PlacasVisadasViewState();
@@ -42,6 +61,12 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
         dataCadastro: DateTime.now(),
       );
     }).toList();
+
+    // Print para verificar se os dados de condutor, CPF, etc., estão sendo retornados corretamente
+    placasVeiculo.forEach((placa) {
+      print(
+          'Placa: ${placa.placa}, Condutor: ${placa.condutor}, CPF: ${placa.cpf}, CNH: ${placa.cnh}, Observação: ${placa.observacao}');
+    });
 
     setState(() {
       _placas = placasVeiculo;
@@ -129,7 +154,6 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                       },
                     ),
                     SizedBox(height: 10),
-
                     // Botão para tirar a foto
                     ElevatedButton(
                       onPressed: () async {
@@ -143,7 +167,6 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                       child: Text('Tirar Foto do Veículo'),
                     ),
                     SizedBox(height: 10),
-
                     // Exibe a foto capturada
                     ValueListenableBuilder<String?>(
                       valueListenable: _fotoPathNotifier,
@@ -154,7 +177,6 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                             : Container();
                       },
                     ),
-
                     SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -165,6 +187,10 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                                 _cnh.isNotEmpty &&
                                 _cpf.isNotEmpty &&
                                 _observacao.isNotEmpty) {
+                              // Debug para verificar valores antes de criar o objeto
+                              print(
+                                  'Condutor: $_condutor, CNH: $_cnh, CPF: $_cpf, Observação: $_observacao');
+
                               PlacaVeiculo novaPlaca = PlacaVeiculo(
                                 placa: placa,
                                 condutor: _condutor,
@@ -174,7 +200,8 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                                 fotoPath: _fotoPathNotifier.value ?? '',
                                 dataCadastro: DateTime.now(),
                               );
-                              await _dbHelper.insertPlaca(novaPlaca);
+                              await _dbHelper.insertPlaca(
+                                  novaPlaca); // Salva a placa no DB
                               ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                       content:
@@ -221,12 +248,16 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
           key: _formKey,
           child: Column(
             children: <Widget>[
+              // Formulário para entrada de placa
               TextFormField(
                 controller: _placaController,
                 decoration: InputDecoration(
                     labelText: 'Informe a Placa', border: OutlineInputBorder()),
                 keyboardType: TextInputType.text,
                 maxLength: 7,
+                inputFormatters: [
+                  UpperCaseTextFormatter(), // Aplica o formatador para maiúsculas
+                ],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Informe uma placa válida';
@@ -250,6 +281,8 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                   itemCount: _placas.length,
                   itemBuilder: (context, index) {
                     PlacaVeiculo placaVeiculo = _placas[index];
+
+                    // Card que exibe a placa
                     return Card(
                       elevation: 5,
                       margin: EdgeInsets.symmetric(vertical: 10),
@@ -263,7 +296,14 @@ class _PlacasVisadasViewState extends State<PlacasVisadasView> {
                         trailing: IconButton(
                           icon: Icon(Icons.info_outline),
                           onPressed: () {
-                            // Mostrar detalhes da placa
+                            // Navegar para a tela de detalhes, passando a placa como parâmetro
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DadosDoCondutorView(
+                                    placa: placaVeiculo.placa),
+                              ),
+                            );
                           },
                         ),
                       ),
