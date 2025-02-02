@@ -1,3 +1,4 @@
+import 'package:note_gm/models/placa_veiculo.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'equipe.dart';
@@ -47,9 +48,14 @@ class DatabaseHelper {
     // Criar tabela de placas
     await db.execute('''
       CREATE TABLE placas(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        placa TEXT UNIQUE
-      )
+          placa TEXT PRIMARY KEY,
+          condutor TEXT,
+          cnh TEXT,
+          cpf TEXT,
+          observacao TEXT,
+          fotoPath TEXT,
+          dataCadastro TEXT
+        )
     ''');
   }
 
@@ -148,10 +154,15 @@ class DatabaseHelper {
     return result.isNotEmpty;
   }
 
-  Future<int> insertPlaca(String placa) async {
-    Database db = await database;
-    return await db.insert('placas', {'placa': placa},
-        conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<void> insertPlaca(PlacaVeiculo placa) async {
+    final db = await database; // Obtém o banco de dados
+
+    // Converte o objeto PlacaVeiculo para um mapa de chave-valor
+    await db.insert(
+      'placas', // Nome da tabela
+      placa.toMap(), // Passa o mapa gerado pelo método toMap()
+      conflictAlgorithm: ConflictAlgorithm.replace, // Caso já exista, substitui
+    );
   }
 
   Future<List<String>> getPlacas() async {

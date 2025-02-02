@@ -4,7 +4,8 @@ import 'package:note_gm/views/boletim_fiscalizacao_view.dart';
 import 'package:note_gm/views/home_view.dart'; // Import da HomeView
 
 import 'package:flutter/material.dart';
-import 'package:note_gm/views/PlacasVisadasView.dart';
+import 'package:note_gm/views/placas_visadas_view.dart';
+
 import 'home_view.dart'; // Certifique-se que o caminho está correto
 
 class MenuPrincipalView extends StatelessWidget {

@@ -17,10 +17,10 @@ class BoletimController {
   Future<void> loadBoletins() async {
     try {
       // Carrega os boletins do banco de dados
-      List<Boletim> loadedBoletins = await _databaseHelper.getBoletins();
+      //List<Boletim> loadedBoletins = await _databaseHelper.get(); // Correção aqui para get()
 
       // Atribui os boletins carregados à lista boletins
-      boletins = loadedBoletins;
+      //boletins = loadedBoletins;
     } catch (e) {
       // Trate qualquer erro que possa ocorrer durante o carregamento
       print('Erro ao carregar os boletins: $e');
@@ -29,7 +29,11 @@ class BoletimController {
 
   // Método para adicionar um novo boletim à lista.
   void addBoletim(Boletim boletim) {
+    // Adiciona o boletim à lista e realiza a persistência se necessário
     boletins.add(boletim);
+
+    // Se quiser garantir que a adição também salve o boletim no banco, pode chamar um método do databaseHelper aqui.
+    // _databaseHelper.insert(boletim);
   }
 
   // Método para buscar boletins com base em uma consulta.
